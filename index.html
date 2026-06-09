@@ -393,7 +393,7 @@
 <h2 class="font-display-lg text-primary text-4xl md:text-5xl mb-6">Rejoignez le mouvement Eiréné méditation.</h2>
 <p class="text-on-surface-variant font-body-md max-w-lg mx-auto">Prêt à transformer votre dynamique d'équipe ? Inscrivez-vous gratuitement à notre prochaine session.</p>
 </div>
-<form class="space-y-6 max-w-2xl mx-auto">
+<form id="register-form" class="space-y-6 max-w-2xl mx-auto">
 <div class="grid md:grid-cols-2 gap-6">
 <div class="space-y-2">
 <label class="font-label-caps text-on-surface-variant text-[10px] uppercase tracking-widest block ml-1" for="field-name">Nom complet</label>
@@ -408,10 +408,11 @@
 <label class="font-label-caps text-on-surface-variant text-[10px] uppercase tracking-widest block ml-1" for="field-phone">Téléphone</label>
 <input id="field-phone" name="phone" autocomplete="tel" required class="w-full bg-surface-container border border-outline-variant/30 rounded-xl px-6 py-4 focus:border-secondary focus:ring-2 focus:ring-secondary/20 outline-none transition-all placeholder:text-on-surface-variant/40" placeholder="06 12 34 56 78" type="tel"/>
 </div>
-<button class="btn-shine w-full bg-primary text-on-primary font-label-caps uppercase py-6 rounded-xl tracking-widest hover:bg-secondary transition-all shadow-xl shadow-primary/20 hover:shadow-secondary/20 hover:-translate-y-0.5 active:scale-[0.99] flex items-center justify-center gap-4 group" type="submit">
+<button id="register-submit" class="btn-shine w-full bg-primary text-on-primary font-label-caps uppercase py-6 rounded-xl tracking-widest hover:bg-secondary transition-all shadow-xl shadow-primary/20 hover:shadow-secondary/20 hover:-translate-y-0.5 active:scale-[0.99] flex items-center justify-center gap-4 group disabled:opacity-60 disabled:cursor-not-allowed" type="submit">
                         Confirmer mon inscription gratuite
                         <span class="material-symbols-outlined group-hover:scale-110 transition-transform">how_to_reg</span>
 </button>
+<p id="register-status" role="status" aria-live="polite" class="text-center font-body-md text-sm hidden"></p>
 <p class="text-center font-body-md text-on-surface-variant/60 text-sm italic">Places limitées pour garantir la qualité des interactions.</p>
 </form>
 </div>
@@ -508,5 +509,42 @@
     } else {
         reveals.forEach(el => el.classList.add('is-visible'));
     }
+
+    // --- Registration form submit -> Make webhook ---
+    const WEBHOOK_URL = 'https://hook.eu2.make.com/d948r65l5j6opbq63mnha5remul3xupo';
+    const form = document.getElementById('register-form');
+    const submitBtn = document.getElementById('register-submit');
+    const status = document.getElementById('register-status');
+
+    const setStatus = (msg, ok) => {
+        status.textContent = msg;
+        status.classList.remove('hidden', 'text-error', 'text-secondary');
+        status.classList.add(ok ? 'text-secondary' : 'text-error');
+    };
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!form.reportValidity()) return;
+
+        submitBtn.disabled = true;
+        setStatus('Envoi en cours…', true);
+
+        const data = Object.fromEntries(new FormData(form).entries());
+
+        try {
+            const res = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            form.reset();
+            setStatus('Merci ! Votre inscription a bien été enregistrée.', true);
+        } catch (err) {
+            setStatus("Une erreur est survenue. Merci de réessayer dans un instant.", false);
+        } finally {
+            submitBtn.disabled = false;
+        }
+    });
 </script>
 </body></html>
