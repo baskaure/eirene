@@ -530,6 +530,9 @@
         setStatus('Envoi en cours…', true);
 
         const data = Object.fromEntries(new FormData(form).entries());
+        data.source = 'Landing Eiréné méditation';
+        data.page_url = window.location.href;
+        data.submittedAt = new Date().toISOString();
 
         try {
             const res = await fetch(WEBHOOK_URL, {
